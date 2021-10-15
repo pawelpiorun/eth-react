@@ -6,3 +6,4 @@ lottery/.DS_Store
 reduxsimplestarter/.babelrc
 reduxsimplestarter/.npmrc
 inbox/.env
+lottery/.env
