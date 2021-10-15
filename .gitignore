@@ -7,3 +7,4 @@ reduxsimplestarter/.babelrc
 reduxsimplestarter/.npmrc
 inbox/.env
 lottery/.env
+reduxsimplestarter/.env
