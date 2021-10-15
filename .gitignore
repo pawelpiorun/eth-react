@@ -1,0 +1,8 @@
+inbox/node_modules
+lottery/node_modules
+lottery-react/node_modules
+reduxsimplestarter/node_modules
+lottery/.DS_Store
+reduxsimplestarter/.babelrc
+reduxsimplestarter/.npmrc
+inbox/.env
