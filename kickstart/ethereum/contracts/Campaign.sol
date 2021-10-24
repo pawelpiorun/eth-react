@@ -1,14 +1,16 @@
-pragma solidity ^0.4.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
 
 contract CampaignFactory {
-    address[] public campaigns;
+    Campaign[] public campaigns;
     
     function newCampaign(uint premiumContribution) public {
-        address newCampaign = new Campaign(premiumContribution, msg.sender);
-        campaigns.push(newCampaign);
+        Campaign campaign = new Campaign(premiumContribution, msg.sender);
+        campaigns.push(campaign);
     }
     
-    function getCampaigns() public view returns (address[]) {
+    function getCampaigns() public view returns (Campaign[] memory) {
         return campaigns;
     }
 }
@@ -26,9 +28,10 @@ contract Campaign {
 
     uint public premiumContribution;
     address public manager;
-    Request[] public requests;
+    mapping(uint => Request) public requests;
     mapping(address => bool) public approvers;
     uint public approversCount;
+    uint public requestsCount;
     
     modifier onlyManager() {
         require(msg.sender == manager);
@@ -40,7 +43,7 @@ contract Campaign {
         _;
     }
     
-    function Campaign(uint premium, address creator) public {
+    constructor(uint premium, address creator) {
         premiumContribution = premium;
         manager = creator;
     }
@@ -56,20 +59,18 @@ contract Campaign {
         }
     }
     
-    function createRequest(string description, uint value,
+    function createRequest(string memory description, uint value,
         address recipient) public onlyManager {
-        Request memory newRequest = Request({
-           description: description,
-           value: value,
-           recipient: recipient,
-           isFinalized: false,
-           yesVotes: 0
-        });
-        requests.push(newRequest);
+        Request storage newRequest = requests[requestsCount++];
+        newRequest.description = description;
+        newRequest.value = value;
+        newRequest.recipient = recipient;
+        newRequest.isFinalized = false;
+        newRequest.yesVotes = 0;
     }
     
     function approveRequest(uint requestIndex) public onlyApprover {
-        require(requestIndex < requests.length);
+        require(requestIndex < requestsCount);
         
         Request storage request = requests[requestIndex];
         require(!request.votes[msg.sender]);
@@ -79,7 +80,7 @@ contract Campaign {
     }
     
     function finalizeRequest(uint requestIndex) public onlyManager {
-        require(requestIndex < requests.length);
+        require(requestIndex < requestsCount);
         
         Request storage request = requests[requestIndex];
         require(!request.isFinalized);
@@ -87,9 +88,11 @@ contract Campaign {
         uint balance = address(this).balance;
         require(balance > request.value);
         
-        require(request.yesVotes > approversCount / 2);
+        require(request.yesVotes >= approversCount / 2);
         
-        request.recipient.transfer(request.value);
+        (bool success, ) = request.recipient.call{value: request.value}("");
+        require(success);
+
         requests[requestIndex].isFinalized = true;
     }
 
@@ -99,13 +102,13 @@ contract Campaign {
         return (
             premiumContribution,
             address(this).balance,
-            requests.length,
+            requestsCount,
             approversCount,
             manager
         );
     }
 
     function getRequestsCount() public view returns (uint) {
-        return requests.length;
+        return requestsCount;
     }
 }

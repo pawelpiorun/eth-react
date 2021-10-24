@@ -15,27 +15,21 @@ let campaign;
 
 beforeEach(async () => {
     accounts = await web3.eth.getAccounts();
-    factory = await new web3.eth.Contract(
-        JSON.parse(compiledFactory.interface))
-        .deploy({ data: compiledFactory.bytecode })
+    factory = await new web3.eth.Contract(compiledFactory.abi)
+        .deploy({ data: compiledFactory.evm.bytecode.object })
         .send({
             from: accounts[0],
-            gas: '1000000',
-            gasPrice: '5000000'
+            gas: '1500000'
         });
     
         await factory.methods.newCampaign('6000')
         .send({ 
             from: accounts[0], 
-            gas: '1000000',
-            gasPrice: '5000000'
+            gas: '1500000'
         });
 
     [campaignAddress] = await factory.methods.getCampaigns().call();
-    campaign = await new web3.eth.Contract(
-        JSON.parse(compiledCampaign.interface),
-        campaignAddress
-        );
+    campaign = await new web3.eth.Contract(compiledCampaign.abi, campaignAddress);
 });
 
 describe('Campaign', () => {
