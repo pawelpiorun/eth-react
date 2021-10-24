@@ -1,4 +1,6 @@
-pragma solidity ^0.4.17;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.9;
 
 contract Lottery {
     address public manager;
@@ -10,7 +12,7 @@ contract Lottery {
         _;
     }
     
-    function Lottery() public {
+    constructor() {
         manager = msg.sender;
     }
     
@@ -25,13 +27,14 @@ contract Lottery {
         require(players.length > 0);
         
         uint index = random()%players.length;
-        players[index].transfer(address(this).balance);
+        (bool success, ) = players[index].call{value: address(this).balance}("");
+        require(success);
         delete players;
     }
     
-    function withdraw() private onlyManager returns(bool) {
-        manager.transfer(address(this).balance);
-        return true;
+    function withdraw() private onlyManager {
+        (bool success, ) = manager.call{value: address(this).balance}("");
+        require(success, "Failed to withdraw");
     }
     
     function cancelAndReturn() public onlyManager {
@@ -40,7 +43,8 @@ contract Lottery {
         
         for (uint i = 0; i < players.length; i++)
         {
-            players[i].transfer(balances[players[i]]);
+            (bool success, ) = players[i].call{value: balances[players[i]]}("");
+            require(success);
             delete balances[players[i]];
         }
             
@@ -52,10 +56,10 @@ contract Lottery {
     }
     
     function random() private view returns (uint) {
-        return uint(keccak256(block.difficulty, now, players));
+        return uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players)));
     }
     
-    function getPlayers() public view returns (address[]) {
+    function getPlayers() public view returns (address[] memory) {
         return players;
     }
 }
