@@ -9,3 +9,7 @@ inbox/.env
 lottery/.env
 reduxsimplestarter/.env
 lottery-react/.env
+kickstart/node_modules
+kickstart/.next
+kickstart/.env.local
+kickstart/ethereum/build
